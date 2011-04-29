@@ -2,7 +2,8 @@
 #include <cstdlib>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include "option-parser.hh"
+#include "const.hh"
+#include "option_parser.hh"
 
 void option_parser::parse(int argc, const char** argv)
 {
@@ -13,7 +14,7 @@ void option_parser::parse(int argc, const char** argv)
   if (argc < 4)
   {
     std::cerr << "Missing arguments!" << std::endl;
-    print_usage(argv[0], 1, std::cerr);
+    print_usage(argv[0], EXIT_ERR, std::cerr);
   }
 
   try
@@ -29,12 +30,12 @@ void option_parser::parse(int argc, const char** argv)
   catch (boost::bad_lexical_cast& e)
   {
     std::cerr << "Memory/time must be integers!" << std::endl;
-    print_usage(argv[0], 1, std::cerr);
+    print_usage(argv[0], EXIT_ERR, std::cerr);
   }
   catch (boost::bad_numeric_cast& e)
   {
     std::cerr << "Memory/time must be positive integers!" << std::endl;
-    print_usage(argv[0], 1, std::cerr);
+    print_usage(argv[0], EXIT_ERR, std::cerr);
   }
 
   for (int i = 3; i < argc; ++i)

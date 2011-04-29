@@ -8,8 +8,10 @@ endif()
 add_executable(
   prolojail
   src/main.cc
-  src/option-parser.cc
-  src/option-parser.hh
+  src/run.cc
+  src/run.hh
+  src/option_parser.cc
+  src/option_parser.hh
 )
 
 enable_testing()

@@ -31,15 +31,18 @@
  */
 
 #include <iostream>
-#include "option-parser.hh"
+#include "option_parser.hh"
+#include "run.hh"
 
 int main (int argc, const char** argv)
 {
   option_parser options;
   options.parse(argc, argv);
 
+  std::cout << "Memory: " << options.get_memory() << " ko." << std::endl;
   std::cout << "Time: " << options.get_time() << " ms." << std::endl;
-  std::cout << "Memory: " << options.get_time() << " ko." << std::endl;
 
-  return 0;
+  exec_jail(options);
+
+  return (0);
 }
