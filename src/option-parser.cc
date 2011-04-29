@@ -37,8 +37,8 @@ void option_parser::parse(int argc, const char** argv)
     print_usage(argv[0], 1, std::cerr);
   }
 
-  _cmd = argv + 3;
-  _cmd_len = argc - 4;
+  for (int i = 3; i < argc; ++i)
+    _cmd.push_back(argv[i]);
 }
 
 void option_parser::print_usage(std::string prog, size_t ret,
@@ -52,14 +52,9 @@ void option_parser::print_usage(std::string prog, size_t ret,
   exit(ret);
 }
 
-const char** option_parser::get_cmd() const
+const option_parser::cmd_type& option_parser::get_cmd() const
 {
   return _cmd;
-}
-
-size_t option_parser::get_cmd_len() const
-{
-  return _cmd_len;
 }
 
 size_t option_parser::get_memory() const
