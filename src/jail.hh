@@ -39,9 +39,14 @@ public:
   }
 
 private:
+  void child_run();
+  void tracer_run();
+
   cmd_type _cmd;
   boost::optional<size_t> _time_limit;
   boost::optional<size_t> _mem_limit;
+
+  pid_t _child_pid;
 };
 
 #endif // !JAIL_HH_
