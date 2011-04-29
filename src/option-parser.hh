@@ -16,7 +16,8 @@ public:
   size_t get_time() const;
 
 protected:
-  void print_usage(std::string prog, size_t ret, std::ostream& out) const;
+  void print_usage(const std::string& prog, size_t ret,
+                   std::ostream& out) const;
 
   cmd_type _cmd;
   size_t _memory;

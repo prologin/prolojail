@@ -41,13 +41,13 @@ void option_parser::parse(int argc, const char** argv)
     _cmd.push_back(argv[i]);
 }
 
-void option_parser::print_usage(std::string prog, size_t ret,
-				std::ostream& out) const
+void option_parser::print_usage(const std::string& prog, size_t ret,
+                                std::ostream& out) const
 {
   out << "Usage: " << prog << " <memory> <time> <bin> [args...]"
       << std::endl
       << "Execute the program BIN in a jail with MEMORY ko and TIME ms."
-      << "" << std::endl;
+      << std::endl;
 
   exit(ret);
 }
