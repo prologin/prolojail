@@ -16,7 +16,6 @@ public:
   size_t get_time() const;
 
 protected:
-  bool file_exists(std::string filename);
   void print_usage(std::string prog, size_t ret, std::ostream& out) const;
 
   cmd_type _cmd;
