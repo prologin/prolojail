@@ -1,4 +1,4 @@
-#include "print.hh"
+#include "signal.hh"
 
 #include <boost/lexical_cast.hpp>
 #include <map>
@@ -29,7 +29,7 @@ const sig_descr_t signals =
   { 19, { "SIGSTOP", "Program stopped" }}
 };
 
-std::string str_signal(size_t signal)
+std::string signal_to_string(int signum)
 {
   sig_descr_t::const_iterator it = signals.find(signal);
   if (it != signals.end())
