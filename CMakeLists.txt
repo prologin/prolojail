@@ -7,6 +7,8 @@ endif()
 
 add_executable(
   prolojail
+  src/jail.cc
+  src/jail.hh
   src/main.cc
   src/run.cc
   src/run.hh
