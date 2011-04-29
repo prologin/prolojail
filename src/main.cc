@@ -30,9 +30,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
+#include "jail.hh"
 #include "option_parser.hh"
-#include "run.hh"
+
+#include <iostream>
 
 int main (int argc, const char** argv)
 {
@@ -42,7 +43,10 @@ int main (int argc, const char** argv)
   std::cout << "Memory: " << options.get_memory() << " ko." << std::endl;
   std::cout << "Time: " << options.get_time() << " ms." << std::endl;
 
-  exec_jail(options);
+  jail j(options.get_cmd());
+  j.time_limit() = options.get_time();
+  j.memory_limit() = options.get_memory();
+  j.run();
 
   return (0);
 }
