@@ -31,11 +31,15 @@
  */
 
 #include <iostream>
+#include "option-parser.hh"
 
-int main (int argc, char **argv)
+int main (int argc, const char **argv)
 {
-  (void)argc;
-  (void)argv;
+  option_parser options;
+  options.parse(argc, argv);
+
+  std::cout << "Time: " << options.get_time() << " ms." << std::endl;
+  std::cout << "Memory: " << options.get_time() << " ko." << std::endl;
 
   return 0;
 }
