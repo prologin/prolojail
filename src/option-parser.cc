@@ -4,7 +4,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include "option-parser.hh"
 
-void option_parser::parse(int argc, const char **argv)
+void option_parser::parse(int argc, const char** argv)
 {
   if (argc > 1 &&
       ("-h" == std::string(argv[1]) || std::string(argv[1]) == "--help"))
@@ -52,7 +52,7 @@ void option_parser::print_usage(std::string prog, size_t ret,
   exit(ret);
 }
 
-const char **option_parser::get_cmd() const
+const char** option_parser::get_cmd() const
 {
   return _cmd;
 }

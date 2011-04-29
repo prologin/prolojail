@@ -33,7 +33,7 @@
 #include <iostream>
 #include "option-parser.hh"
 
-int main (int argc, const char **argv)
+int main (int argc, const char** argv)
 {
   option_parser options;
   options.parse(argc, argv);
