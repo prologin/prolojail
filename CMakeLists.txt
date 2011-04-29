@@ -14,6 +14,8 @@ add_executable(
   src/option_parser.hh
   src/print.cc
   src/print.hh
+  src/syscall_jail.cc
+  src/syscall_jail.hh
 )
 
 enable_testing()
