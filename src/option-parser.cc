@@ -54,10 +54,10 @@ void option_parser::parse(int argc, const char** argv)
     int tmp;
 
     tmp = boost::lexical_cast<int>(argv[1]);
-    _memory = boost::numeric_cast<size_t>(tmp);
+    memory_ = boost::numeric_cast<size_t>(tmp);
 
     tmp = boost::lexical_cast<int>(argv[2]);
-    _time = boost::numeric_cast<size_t>(tmp);
+    time_ = boost::numeric_cast<size_t>(tmp);
   }
   catch (boost::bad_lexical_cast& e)
   {
@@ -71,7 +71,7 @@ void option_parser::parse(int argc, const char** argv)
   }
 
   for (int i = 3; i < argc; ++i)
-    _cmd.push_back(argv[i]);
+    cmd_.push_back(argv[i]);
 }
 
 void option_parser::print_usage(const std::string& prog, size_t ret,
@@ -87,15 +87,15 @@ void option_parser::print_usage(const std::string& prog, size_t ret,
 
 const option_parser::cmd_type& option_parser::get_cmd() const
 {
-  return _cmd;
+  return cmd_;
 }
 
 size_t option_parser::get_memory() const
 {
-  return _memory;
+  return memory_;
 }
 
 size_t option_parser::get_time() const
 {
-  return _time;
+  return time_;
 }

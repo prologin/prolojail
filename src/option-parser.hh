@@ -51,9 +51,9 @@ protected:
   void print_usage(const std::string& prog, size_t ret,
                    std::ostream& out) const;
 
-  cmd_type _cmd;
-  size_t _memory;
-  size_t _time;
+  cmd_type cmd_;
+  size_t memory_;
+  size_t time_;
 };
 
 #endif /* !OPTION_PARSER_HH_ */
