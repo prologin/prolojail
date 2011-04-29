@@ -12,6 +12,8 @@ add_executable(
   src/run.hh
   src/option_parser.cc
   src/option_parser.hh
+  src/print.cc
+  src/print.hh
 )
 
 enable_testing()

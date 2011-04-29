@@ -1,12 +1,15 @@
 #include <iostream>
 #include <cstdlib>
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
+
 #include "const.hh"
 #include "option_parser.hh"
+#include "print.hh"
 #include "run.hh"
 
 static void set_limits()
@@ -52,11 +55,26 @@ static pid_t run(const option_parser::cmd_type& cmd)
   }
 }
 
+static void print_proc_exit(int status)
+{
+  int exit_code = WEXITSTATUS (status);
+  if (WIFSIGNALED(status))
+  {
+    int signal = WTERMSIG(status);
+    std::cerr << "Terminated by signal " << str_signal(signal) << "."
+              << std::endl;
+  }
+  else
+  {
+    std::cerr << "Terminated with code " << exit_code << "." << std::endl;
+  }
+}
+
 static void wait_process(pid_t pid, size_t time_max)
 {
   close(0);
   close(1);
-  close(2);
+  // close(2);
 
   int status = 0;
   size_t time = 0;
@@ -66,10 +84,17 @@ static void wait_process(pid_t pid, size_t time_max)
     time += SLEEP_TIME;
   }
 
+  // Max time reached
   if (time >= time_max)
   {
     kill(pid, SIGKILL);
+    std::cerr << "Terminated after max-time reached." << std::endl;
     exit(EXIT_TIME);
+  }
+  // Normal exit
+  else
+  {
+    print_proc_exit(status);
   }
 }
 
