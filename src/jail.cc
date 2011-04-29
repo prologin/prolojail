@@ -36,15 +36,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-jail::jail(const jail::cmd_type& cmd) : _cmd(cmd)
+jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 {
 }
 
 int jail::run()
 {
-  if ((_child_pid = fork()) == -1)
+  if ((child_pid_ = fork()) == -1)
     return 1; // TODO: exception here
-  else if (!_child_pid)
+  else if (!child_pid_)
     exit(child_run());
   else
     return tracer_run();
@@ -52,15 +52,15 @@ int jail::run()
 
 int jail::child_run()
 {
-  const char* argv[_cmd.size() + 1];
+  const char* argv[cmd_.size() + 1];
   unsigned int i = 0;
 
-  for (; i < _cmd.size(); ++i)
-    argv[i] = _cmd[i].c_str();
+  for (; i < cmd_.size(); ++i)
+    argv[i] = cmd_[i].c_str();
   argv[i] = NULL;
 
   ptrace(PTRACE_TRACEME, 0, NULL, NULL);
-  execvp(_cmd[0].c_str(), (char* const*)argv);
+  execvp(cmd_[0].c_str(), (char* const*)argv);
 
   return 1;
 }
@@ -85,7 +85,7 @@ int jail::tracer_run()
     int return_code;
     int signum = 0;
 
-    if (waitpid(_child_pid, &status, 0) < 0)
+    if (waitpid(child_pid_, &status, 0) < 0)
     {
       // TODO: exception here
       return 1;
@@ -94,6 +94,6 @@ int jail::tracer_run()
     if ((return_code = tracer_handle_status(status, signum)) >= 0)
       return return_code;
 
-    ptrace(PTRACE_SYSCALL, _child_pid, NULL, reinterpret_cast<void*>(signum));
+    ptrace(PTRACE_SYSCALL, child_pid_, NULL, reinterpret_cast<void*>(signum));
   }
 }

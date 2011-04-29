@@ -36,9 +36,9 @@
 #include <map>
 #include <vector>
 
-typedef std::map<int, std::pair<std::string, std::string>> sig_descr_t;
+typedef std::map<int, std::pair<std::string, std::string>> t_sig_descr;
 
-const sig_descr_t signals =
+const t_sig_descr signals =
 {
   { 1, { "SIGHUP", "Hangup detected" }},
   { 2, { "SIGINT", "Program interrupted" }},
@@ -63,7 +63,7 @@ const sig_descr_t signals =
 
 std::string signal_to_string(int signum)
 {
-  sig_descr_t::const_iterator it = signals.find(signum);
+  t_sig_descr::const_iterator it = signals.find(signum);
   if (it != signals.end())
   {
     return it->second.first + " (" + it->second.second + ")";
