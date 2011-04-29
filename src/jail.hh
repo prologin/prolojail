@@ -11,7 +11,7 @@ public:
   typedef std::vector<std::string> cmd_type;
 
   jail(const cmd_type& cmd);
-  void run();
+  int run();
 
   const cmd_type& cmd() const
   {
@@ -39,8 +39,10 @@ public:
   }
 
 private:
-  void child_run();
-  void tracer_run();
+  int child_run();
+  int tracer_run();
+
+  int tracer_handle_status(int status, int& signum);
 
   cmd_type _cmd;
   boost::optional<size_t> _time_limit;

@@ -46,7 +46,5 @@ int main (int argc, const char** argv)
   jail j(options.get_cmd());
   j.time_limit() = options.get_time();
   j.memory_limit() = options.get_memory();
-  j.run();
-
-  return (0);
+  return j.run();
 }
