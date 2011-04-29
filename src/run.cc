@@ -101,7 +101,7 @@ static void wait_process(pid_t pid, size_t time_max, size_t mem_max)
       exited = WIFEXITED(status) || WIFSIGNALED(status);
     }
 
-    usleep(SLEEP_TIME);
+    usleep(SLEEP_TIME * 1000);
     time += SLEEP_TIME;
   }
   while (time_max > time && mem_max > mem && !exited);
