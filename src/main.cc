@@ -31,7 +31,7 @@
  */
 
 #include "jail.hh"
-#include "option_parser.hh"
+#include "option-parser.hh"
 
 #include <iostream>
 

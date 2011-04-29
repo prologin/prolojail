@@ -10,8 +10,8 @@ add_executable(
   src/jail.cc
   src/jail.hh
   src/main.cc
-  src/option_parser.cc
-  src/option_parser.hh
+  src/option-parser.cc
+  src/option-parser.hh
   src/signal.cc
   src/signal.hh
 )

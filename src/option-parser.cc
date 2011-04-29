@@ -30,7 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "option_parser.hh"
+#include "option-parser.hh"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
