@@ -31,14 +31,14 @@ const sig_descr_t signals =
 
 std::string signal_to_string(int signum)
 {
-  sig_descr_t::const_iterator it = signals.find(signal);
+  sig_descr_t::const_iterator it = signals.find(signum);
   if (it != signals.end())
   {
     return it->second.first + " (" + it->second.second + ")";
   }
   else
   {
-    std::string s = boost::lexical_cast<std::string>(signal);
+    std::string s = boost::lexical_cast<std::string>(signum);
     return std::string("Unknown signal (code ") + s + ")";
   }
 }

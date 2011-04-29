@@ -10,12 +10,10 @@ add_executable(
   src/jail.cc
   src/jail.hh
   src/main.cc
-  src/run.cc
-  src/run.hh
   src/option_parser.cc
   src/option_parser.hh
-  src/print.cc
-  src/print.hh
+  src/signal.cc
+  src/signal.hh
   src/syscall_jail.cc
   src/syscall_jail.hh
 )
