@@ -37,6 +37,8 @@
 # include <string>
 # include <vector>
 
+# define SLEEP_TIME_MS 100
+
 class jail
 {
 public:
@@ -73,6 +75,11 @@ public:
 private:
   int child_run();
   int tracer_run();
+  int kill_process();
+
+  void check_limits();
+  void check_time_limit();
+  void check_memory_limit();
 
   int tracer_handle_status(int status, int& signum);
 

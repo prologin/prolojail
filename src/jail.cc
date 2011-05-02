@@ -34,6 +34,8 @@
 #include "signal.hh"
 #include "exec-exception.hh"
 
+#include <iostream>
+
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -89,7 +91,7 @@ int jail::tracer_run()
     int return_code;
     int signum = 0;
 
-    if (waitpid(child_pid_, &status, 0) < 0)
+    if (waitpid(child_pid_, &status, WNOHANG) < 0)
     {
       throw new exec_exception("waitpid error: " +
                                std::string(strerror(errno)));
@@ -98,6 +100,52 @@ int jail::tracer_run()
     if ((return_code = tracer_handle_status(status, signum)) >= 0)
       return return_code;
 
+    check_limits();
+
     ptrace(PTRACE_SYSCALL, child_pid_, NULL, reinterpret_cast<void*>(signum));
+    usleep(SLEEP_TIME_MS * 1000);
   }
+}
+
+void jail::check_limits()
+{
+  check_time_limit();
+  check_memory_limit();
+}
+
+void jail::check_time_limit()
+{
+  if (time_limit_ != boost::none)
+  {
+    size_t time = 0;
+
+    // TODO: check user CPU usage
+
+    if (time > time_limit_)
+    {
+      kill_process();
+      throw new exec_exception("max time reached");
+    }
+  }
+}
+
+void jail::check_memory_limit()
+{
+  if (mem_limit_ != boost::none)
+  {
+    size_t mem = 0;
+
+    // TODO: check memory usage
+
+    if (mem > mem_limit_)
+    {
+      kill_process();
+      throw new exec_exception("max memory reached");
+    }
+  }
+}
+
+int jail::kill_process()
+{
+  return (kill(child_pid_, SIGQUIT));
 }
