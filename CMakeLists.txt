@@ -17,5 +17,6 @@ add_executable(
   src/exec-exception.cc
   src/exec-exception.hh
 )
+target_link_libraries(prolojail pthread)
 
 enable_testing()

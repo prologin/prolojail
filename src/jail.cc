@@ -32,12 +32,16 @@
 
 #include "jail.hh"
 #include "signal.hh"
-#include "exec-exception.hh"
+
+#include <iostream>
+#include <fstream>
+#include <boost/lexical_cast.hpp>
 
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <pthread.h>
 
 jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 {
@@ -46,7 +50,7 @@ jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 int jail::run()
 {
   if ((child_pid_ = fork()) == -1)
-    throw new exec_exception("could not fork");
+    throw exec_exception("could not fork");
   else if (!child_pid_)
     exit(child_run());
   else
@@ -72,8 +76,8 @@ int jail::tracer_handle_status(int status, int& signum)
 {
   if (WIFEXITED(status))
     return WEXITSTATUS(status);
-  else if (WIFSIGNALED(status))
-    throw new exec_exception("terminated by signal: " +
+  else if (WIFSIGNALED(status) && WSTOPSIG (status) != SIGTRAP)
+    throw exec_exception("terminated by signal: " +
                              signal_to_string(WTERMSIG(status)));
   else if (WSTOPSIG(status) != SIGTRAP)
     signum = WSTOPSIG(status);
@@ -83,26 +87,28 @@ int jail::tracer_handle_status(int status, int& signum)
 
 int jail::tracer_run()
 {
+  pthread_t thread;
+  start_watchdog(&thread);
+
   while (true)
   {
     int status;
     int return_code;
     int signum = 0;
 
-    if (waitpid(child_pid_, &status, WNOHANG) < 0)
+    if (waitpid(child_pid_, &status, 0) < 0)
     {
-      throw new exec_exception("waitpid error: " +
+      throw exec_exception("waitpid error: " +
                                std::string(strerror(errno)));
     }
 
     if ((return_code = tracer_handle_status(status, signum)) >= 0)
       return return_code;
 
-    check_limits();
-
     ptrace(PTRACE_SYSCALL, child_pid_, NULL, reinterpret_cast<void*>(signum));
-    usleep(SLEEP_TIME_MS * 1000);
   }
+
+  pthread_join(thread, NULL); // Handle error code specifying MAX-(time/memory)
 }
 
 void jail::check_limits()
@@ -122,7 +128,7 @@ void jail::check_time_limit()
     if (time > time_limit_)
     {
       kill_process();
-      throw new exec_exception("max time reached");
+      throw exec_exception("max time reached");
     }
   }
 }
@@ -133,12 +139,30 @@ void jail::check_memory_limit()
   {
     size_t mem = 0;
 
-    // TODO: check memory usage
+    std::string pid = boost::lexical_cast<std::string>(child_pid_);
+    std::string file = "/proc/" + pid + "/status";
+    std::ifstream h(file);
+    if (!h.is_open())
+      return; // TODO: Handle error
+
+    while (!h.eof())
+    {
+      std::string token;
+      h >> token;
+
+      if (token == "VmStk:" || token == "VmData:")
+      {
+        h >> token;
+        mem += boost::lexical_cast<size_t>(token);
+      }
+    }
+    h.close();
 
     if (mem > mem_limit_)
     {
       kill_process();
-      throw new exec_exception("max memory reached");
+      std::string size = boost::lexical_cast<std::string>(mem);
+      throw exec_exception("max memory reached: " + size + " kB");
     }
   }
 }
@@ -146,4 +170,38 @@ void jail::check_memory_limit()
 int jail::kill_process()
 {
   return (kill(child_pid_, SIGQUIT));
+}
+
+void jail::start_watchdog(pthread_t* thread)
+{
+  if (pthread_create(thread, NULL, thread_entry, this) != 0)
+    return; // TODO: Handle error
+}
+
+void* jail::thread_entry(void* obj)
+{
+  jail* pthis = (jail*) obj;
+  return (pthis->thread_run());
+}
+
+void* jail::thread_run()
+{
+  std::cout << "ID: " << child_pid_ << std::endl;
+
+  while (true)
+  {
+    try
+    {
+      check_limits();
+    }
+    catch (exec_exception& e)
+    {
+      std::cerr << e.what() << std::endl;
+      pthread_exit(NULL); // Return an error code
+    }
+
+    usleep(SLEEP_TIME_MS * 1000);
+  }
+
+  pthread_exit(NULL);
 }

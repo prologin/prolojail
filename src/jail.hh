@@ -33,6 +33,8 @@
 #ifndef JAIL_HH_
 # define JAIL_HH_
 
+#include "exec-exception.hh"
+
 # include <boost/optional.hpp>
 # include <string>
 # include <vector>
@@ -80,6 +82,10 @@ private:
   void check_limits();
   void check_time_limit();
   void check_memory_limit();
+
+  void start_watchdog(pthread_t* thread);
+  static void *thread_entry(void* obj);
+  void* thread_run();
 
   int tracer_handle_status(int status, int& signum);
 
