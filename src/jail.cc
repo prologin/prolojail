@@ -34,8 +34,6 @@
 #include "signal.hh"
 #include "exec-exception.hh"
 
-#include <iostream>
-
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
