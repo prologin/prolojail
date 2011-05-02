@@ -31,10 +31,13 @@
  */
 
 #include "jail.hh"
+#include "signal.hh"
+#include "exec-exception.hh"
 
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
 
 jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 {
@@ -43,7 +46,7 @@ jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 int jail::run()
 {
   if ((child_pid_ = fork()) == -1)
-    return 1; // TODO: exception here
+    throw new exec_exception("could not fork");
   else if (!child_pid_)
     exit(child_run());
   else
@@ -70,7 +73,8 @@ int jail::tracer_handle_status(int status, int& signum)
   if (WIFEXITED(status))
     return WEXITSTATUS(status);
   else if (WIFSIGNALED(status))
-    return 1; // TODO: report an error
+    throw new exec_exception("terminated by signal: " +
+                             signal_to_string(WTERMSIG(status)));
   else if (WSTOPSIG(status) != SIGTRAP)
     signum = WSTOPSIG(status);
 
@@ -87,8 +91,8 @@ int jail::tracer_run()
 
     if (waitpid(child_pid_, &status, 0) < 0)
     {
-      // TODO: exception here
-      return 1;
+      throw new exec_exception("waitpid error: " +
+                               std::string(strerror(errno)));
     }
 
     if ((return_code = tracer_handle_status(status, signum)) >= 0)

@@ -32,6 +32,7 @@
 
 #include "jail.hh"
 #include "option-parser.hh"
+#include "exec-exception.hh"
 
 #include <iostream>
 
@@ -46,5 +47,14 @@ int main (int argc, const char** argv)
   jail j(options.get_cmd());
   j.time_limit() = options.get_time();
   j.memory_limit() = options.get_memory();
-  return j.run();
+
+  try
+  {
+    return j.run();
+  }
+  catch (exec_exception& e)
+  {
+    std::cerr << e.what() << std::endl;
+    return (1);
+  }
 }

@@ -14,6 +14,8 @@ add_executable(
   src/option-parser.hh
   src/signal.cc
   src/signal.hh
+  src/exec-exception.cc
+  src/exec-exception.hh
 )
 
 enable_testing()
