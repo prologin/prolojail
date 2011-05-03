@@ -40,6 +40,9 @@
 # include <vector>
 
 # define SLEEP_TIME_MS 100
+# define ERR_PROCESS_TERM 1
+# define ERR_MAX_TIME 2
+# define ERR_MAX_MEM 4
 
 class jail
 {
@@ -79,9 +82,11 @@ private:
   int tracer_run();
   int kill_process();
 
-  void check_limits();
-  void check_time_limit();
-  void check_memory_limit();
+  size_t check_limits();
+  size_t check_time_limit();
+  size_t check_memory_limit();
+
+  int handle_return_code(size_t res_thread, int return_code, int signum);
 
   void start_watchdog(pthread_t* thread);
   static void *thread_entry(void* obj);
@@ -94,6 +99,8 @@ private:
   boost::optional<size_t> mem_limit_;
 
   pid_t child_pid_;
+  volatile bool process_terminated_;
+  pthread_mutex_t mutex_;
 };
 
 #endif // !JAIL_HH_

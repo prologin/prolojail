@@ -49,6 +49,9 @@ jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 
 int jail::run()
 {
+  process_terminated_ = false;
+  mutex_ = PTHREAD_MUTEX_INITIALIZER;
+
   if ((child_pid_ = fork()) == -1)
     throw exec_exception("could not fork");
   else if (!child_pid_)
@@ -76,13 +79,14 @@ int jail::tracer_handle_status(int status, int& signum)
 {
   if (WIFEXITED(status))
     return WEXITSTATUS(status);
-  else if (WIFSIGNALED(status) && WSTOPSIG (status) != SIGTRAP)
-    throw exec_exception("terminated by signal: " +
-                             signal_to_string(WTERMSIG(status)));
-  else if (WSTOPSIG(status) != SIGTRAP)
+  else if ((WIFSIGNALED(status) || WIFSTOPPED(status)) &&
+           WSTOPSIG(status) != SIGTRAP)
+  {
     signum = WSTOPSIG(status);
-
-  return -1;
+    return (1);
+  }
+  else
+    return (-1);
 }
 
 int jail::tracer_run()
@@ -90,34 +94,76 @@ int jail::tracer_run()
   pthread_t thread;
   start_watchdog(&thread);
 
+  int signum = 0;
+  int return_code;
+
   while (true)
   {
     int status;
-    int return_code;
-    int signum = 0;
 
     if (waitpid(child_pid_, &status, 0) < 0)
     {
       throw exec_exception("waitpid error: " +
-                               std::string(strerror(errno)));
+                           std::string(strerror(errno)));
     }
 
     if ((return_code = tracer_handle_status(status, signum)) >= 0)
-      return return_code;
+      break;
 
     ptrace(PTRACE_SYSCALL, child_pid_, NULL, reinterpret_cast<void*>(signum));
   }
 
-  pthread_join(thread, NULL); // Handle error code specifying MAX-(time/memory)
+  pthread_mutex_lock(&mutex_);
+  process_terminated_ = true;
+  pthread_mutex_unlock(&mutex_);
+
+  int res_thread;
+  pthread_join(thread, (void**) &res_thread);
+  return (handle_return_code(res_thread, return_code, signum));
 }
 
-void jail::check_limits()
+int jail::handle_return_code(size_t res_thread, int return_code, int signum)
 {
-  check_time_limit();
-  check_memory_limit();
+  if (res_thread == 0)
+  {
+    if (signum == 0)
+      return (return_code);
+    else
+    {
+      std::cerr << "Terminated by a signal: "
+                << signal_to_string(signum)
+                << std::endl;
+      return (1);
+    }
+  }
+  else
+  {
+    if (res_thread & ERR_MAX_TIME)
+      std::cerr << "Max time reached" << std::endl;
+    if (res_thread & ERR_MAX_MEM)
+      std::cerr << "Max memory reached" << std::endl;
+
+    return (1);
+  }
+
 }
 
-void jail::check_time_limit()
+size_t jail::check_limits()
+{
+  bool is_terminated;
+
+  pthread_mutex_lock(&mutex_);
+  is_terminated = process_terminated_;
+  pthread_mutex_unlock(&mutex_);
+
+  if (is_terminated)
+    return (ERR_PROCESS_TERM);
+
+  return  (check_time_limit() |
+           check_memory_limit());
+}
+
+size_t jail::check_time_limit()
 {
   if (time_limit_ != boost::none)
   {
@@ -128,12 +174,14 @@ void jail::check_time_limit()
     if (time > time_limit_)
     {
       kill_process();
-      throw exec_exception("max time reached");
+      return (ERR_MAX_TIME);
     }
   }
+
+  return (0);
 }
 
-void jail::check_memory_limit()
+size_t jail::check_memory_limit()
 {
   if (mem_limit_ != boost::none)
   {
@@ -143,7 +191,7 @@ void jail::check_memory_limit()
     std::string file = "/proc/" + pid + "/status";
     std::ifstream h(file);
     if (!h.is_open())
-      return; // TODO: Handle error
+      return (ERR_PROCESS_TERM);
 
     while (!h.eof())
     {
@@ -162,9 +210,11 @@ void jail::check_memory_limit()
     {
       kill_process();
       std::string size = boost::lexical_cast<std::string>(mem);
-      throw exec_exception("max memory reached: " + size + " kB");
+      return (ERR_MAX_MEM);
     }
   }
+
+  return (0);
 }
 
 int jail::kill_process()
@@ -190,18 +240,17 @@ void* jail::thread_run()
 
   while (true)
   {
-    try
+    int res;
+    if ((res = check_limits()) != 0)
     {
-      check_limits();
-    }
-    catch (exec_exception& e)
-    {
-      std::cerr << e.what() << std::endl;
-      pthread_exit(NULL); // Return an error code
+      if (res & ERR_PROCESS_TERM)
+        pthread_exit(NULL);
+      else
+        pthread_exit((void*) res);
     }
 
     usleep(SLEEP_TIME_MS * 1000);
   }
 
-  pthread_exit(NULL);
+  pthread_exit(0);
 }
