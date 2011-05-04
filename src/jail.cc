@@ -49,9 +49,6 @@ jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 
 int jail::run()
 {
-  process_terminated_ = false;
-  mutex_ = PTHREAD_MUTEX_INITIALIZER;
-
   if ((child_pid_ = fork()) == -1)
     throw exec_exception("could not fork");
   else if (!child_pid_)
@@ -96,11 +93,10 @@ int jail::tracer_run()
 
   int signum = 0;
   int return_code;
+  int status;
 
   while (true)
   {
-    int status;
-
     if (waitpid(child_pid_, &status, 0) < 0)
     {
       throw exec_exception("waitpid error: " +
@@ -113,9 +109,8 @@ int jail::tracer_run()
     ptrace(PTRACE_SYSCALL, child_pid_, NULL, reinterpret_cast<void*>(signum));
   }
 
-  pthread_mutex_lock(&mutex_);
-  process_terminated_ = true;
-  pthread_mutex_unlock(&mutex_);
+  ptrace(PTRACE_KILL, child_pid_, NULL, NULL);
+  waitpid(child_pid_, &status, 0);
 
   int res_thread;
   pthread_join(thread, (void**) &res_thread);
@@ -150,15 +145,6 @@ int jail::handle_return_code(size_t res_thread, int return_code, int signum)
 
 size_t jail::check_limits()
 {
-  bool is_terminated;
-
-  pthread_mutex_lock(&mutex_);
-  is_terminated = process_terminated_;
-  pthread_mutex_unlock(&mutex_);
-
-  if (is_terminated)
-    return (ERR_PROCESS_TERM);
-
   return  (check_time_limit() |
            check_memory_limit());
 }

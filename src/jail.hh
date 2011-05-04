@@ -99,8 +99,6 @@ private:
   boost::optional<size_t> mem_limit_;
 
   pid_t child_pid_;
-  volatile bool process_terminated_;
-  pthread_mutex_t mutex_;
 };
 
 #endif // !JAIL_HH_
