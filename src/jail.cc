@@ -155,7 +155,24 @@ size_t jail::check_time_limit()
   {
     size_t time = 0;
 
-    // TODO: check user CPU usage
+    std::string pid = boost::lexical_cast<std::string>(child_pid_);
+    std::string file = "/proc/" + pid + "/stat";
+    std::ifstream h(file);
+    if (!h.is_open())
+      return (ERR_PROCESS_TERM);
+
+    int i;
+    std::string token;
+    for (i = 0; i < 14 && !h.eof(); i++)
+    {
+      h >> token;
+    }
+    h.close();
+
+    if (i == 14)
+    {
+      time = boost::lexical_cast<size_t>(token) * sysconf(_SC_CLK_TCK) / 10;
+    }
 
     if (time > time_limit_)
     {
@@ -211,7 +228,10 @@ int jail::kill_process()
 void jail::start_watchdog(pthread_t* thread)
 {
   if (pthread_create(thread, NULL, thread_entry, this) != 0)
-    return; // TODO: Handle error
+  {
+    std::cerr << "Failed to create a thread." << std::endl;
+    exit(1);
+  }
 }
 
 void* jail::thread_entry(void* obj)
@@ -222,8 +242,6 @@ void* jail::thread_entry(void* obj)
 
 void* jail::thread_run()
 {
-  std::cout << "ID: " << child_pid_ << std::endl;
-
   while (true)
   {
     int res;
