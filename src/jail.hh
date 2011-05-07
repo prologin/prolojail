@@ -39,6 +39,8 @@
 # include <string>
 # include <vector>
 
+# include <time.h>
+
 # define SLEEP_TIME_MS 100
 # define ERR_PROCESS_TERM 1
 # define ERR_MAX_TIME 2
@@ -84,6 +86,7 @@ private:
 
   size_t check_limits();
   size_t check_time_limit();
+  size_t check_time_limit_fallback();
   size_t check_memory_limit();
 
   int handle_return_code(size_t res_thread, int return_code, int signum);
@@ -98,6 +101,7 @@ private:
   boost::optional<size_t> time_limit_;
   boost::optional<size_t> mem_limit_;
 
+  time_t timestamp_start_;
   pid_t child_pid_;
 };
 

@@ -42,6 +42,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h>
 
 jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 {
@@ -49,6 +50,8 @@ jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 
 int jail::run()
 {
+  timestamp_start_ = time(NULL);
+
   if ((child_pid_ = fork()) == -1)
     throw exec_exception("could not fork");
   else if (!child_pid_)
@@ -175,6 +178,26 @@ size_t jail::check_time_limit()
     }
 
     if (time > time_limit_)
+    {
+      kill_process();
+      return (ERR_MAX_TIME);
+    }
+
+    return check_time_limit_fallback();
+  }
+
+  return (0);
+}
+
+// If the program take more than 3 times the time allocated, terminate it.
+// It prevent programs from sleeping (and not using CPU time), and thus not
+// being killed.
+size_t jail::check_time_limit_fallback()
+{
+  if (time_limit_ != boost::none)
+  {
+    size_t timeout = 3 * (*time_limit_ / 1000);
+    if ((time(NULL) - timestamp_start_) > timeout)
     {
       kill_process();
       return (ERR_MAX_TIME);
