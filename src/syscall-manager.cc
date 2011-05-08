@@ -31,6 +31,7 @@
  */
 
 #include "syscall-manager.hh"
+#include "const.hh"
 
 #include <iostream>
 #include <map>
@@ -40,6 +41,7 @@
 #include <asm/unistd_32.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <fcntl.h>
 
 typedef std::map<int, std::string> t_syscall_name;
 
@@ -48,7 +50,7 @@ const t_syscall_name syscalls =
   { __NR_access, "access" }, // FIXME: to filter (pathname)
   { __NR_brk, "brk" },
   { __NR_close, "close" },
-  { __NR_execve, "execve" }, // FIXME: only the first one
+  { __NR_execve, "execve" },
   { __NR_exit_group, "exit_group" },
   { __NR_fstat64, "fstat64" },
   { __NR_mmap2, "mmap2" },
@@ -104,24 +106,30 @@ int syscall_manager::handle()
 
 void syscall_manager::print_call(t_regs* regs)
 {
-    t_syscall_name::const_iterator it = syscalls.find(regs->eax);
+    t_syscall_name::const_iterator it = syscalls.find(regs->orig_eax);
     std::string name;
     name = (it != syscalls.end()) ? it->second : "[unknown syscall]";
 
-    std::cout << "Syscall called: " << name << std::endl;
-    std::cout << "Arg1: " << regs->ebx << std::endl;
-    std::cout << "Arg2: " << regs->ecx << std::endl;
-    std::cout << "Arg3: " << regs->edx << std::endl;
-    std::cout << "Arg4: " << regs->esi << std::endl;
-    std::cout << "Arg5: " << regs->edi << std::endl;
-    std::cout << "Arg6: " << regs->ebp << std::endl;
-    std::cout << std::endl;
+    std::cerr << "Syscall called: " << name << std::endl;
+    std::cerr << "Arg1: " << regs->ebx << std::endl;
+    std::cerr << "Arg2: " << regs->ecx << std::endl;
+    std::cerr << "Arg3: " << regs->edx << std::endl;
+    std::cerr << "Arg4: " << regs->esi << std::endl;
+    std::cerr << "Arg5: " << regs->edi << std::endl;
+    std::cerr << "Arg6: " << regs->ebp << std::endl;
+    std::cerr << std::endl;
 }
 
 bool syscall_manager::is_deep_allowed(t_regs* regs, int sys)
 {
   if (sys == __NR_execve)
     return (handle_sys_execve(regs));
+  if (sys == __NR_open)
+    return (handle_sys_open(regs));
+  if (sys == __NR_access)
+    return (handle_sys_access(regs));
+  if (sys == __NR_stat64)
+    return (handle_sys_stat64(regs));
   else
     return (true);
 }
@@ -138,7 +146,29 @@ bool syscall_manager::handle_sys_execve(t_regs* regs)
   }
 }
 
+/**
+ * Forbid open on unauthorized paths and prevent file opening in write mode.
+ */
 bool syscall_manager::handle_sys_open(t_regs* regs)
+{
+  print_call(regs);
+
+  int flags = regs->ecx;
+  if (flags != O_RDONLY)
+    return (false);
+
+  // FIXME: check path
+  return (true);
+}
+
+bool syscall_manager::handle_sys_access(t_regs* regs)
+{
+  // FIXME: check path
+  (void) regs;
+  return (true);
+}
+
+bool syscall_manager::handle_sys_stat64(t_regs* regs)
 {
   // FIXME: check path
   (void) regs;

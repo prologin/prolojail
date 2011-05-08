@@ -59,6 +59,8 @@ protected:
 
   bool handle_sys_execve(t_regs* regs);
   bool handle_sys_open(t_regs* regs);
+  bool handle_sys_access(t_regs* regs);
+  bool handle_sys_stat64(t_regs* regs);
 };
 
 #endif /* !SYSCALL_MANAGER_HH_ */
