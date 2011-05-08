@@ -18,6 +18,7 @@ add_executable(
   src/exec-exception.hh
   src/syscall-manager.cc
   src/syscall-manager.hh
+  src/const.hh
 )
 target_link_libraries(prolojail pthread)
 

@@ -86,10 +86,14 @@ int syscall_manager::handle()
     if (!is_allowed(num) || !is_deep_allowed(&regs, num))
     {
       std::cerr << "Syscall forbidden or blocked (num = " << num << ")"
-                << std::endl
-                << "See /usr/include/asm-generic/unistd.h for more information"
+                << std::endl;
+
+#ifdef DEBUG
+      std::cerr << "See /usr/include/asm-generic/unistd.h for more information"
                 << std::endl << std::endl;
       print_call(&regs);
+#endif
+
       kill(pid_, SIGKILL);
       return (0);
     }
