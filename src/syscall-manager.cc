@@ -45,27 +45,26 @@ typedef std::map<int, std::string> t_syscall_name;
 
 const t_syscall_name syscalls =
 {
-  { __NR_access, "access" }, // to filter (pathname)
+  { __NR_access, "access" }, // FIXME: to filter (pathname)
   { __NR_brk, "brk" },
   { __NR_close, "close" },
-  { __NR_execve, "execve" }, // only the first one
+  { __NR_execve, "execve" }, // FIXME: only the first one
   { __NR_exit_group, "exit_group" },
   { __NR_fstat64, "fstat64" },
   { __NR_mmap2, "mmap2" },
   { __NR_mprotect, "mprotect" },
   { __NR_munmap, "munmap" },
   { __NR_nanosleep, "nanosleep" },
-  { __NR_open, "open" }, // to filter (pathname)
+  { __NR_open, "open" }, // FIXME: to filter (pathname)
   { __NR_read, "read" },
   { __NR_rt_sigaction, "rt_sigaction" },
   { __NR_rt_sigprocmask, "rt_sigprocmask" },
   { __NR_set_thread_area, "set_thread_area" },
-  { __NR_stat64, "stat64" }, // to filter (pathname)
-  { __NR_getpid, "getpid" },
-  { __NR_kill, "kill" }
+  { __NR_stat64, "stat64" }, // FIXME: to filter (pathname)
+  { __NR_write, "write" }
 };
 
-SyscallManager::SyscallManager() : in_syscall_(false)
+SyscallManager::SyscallManager() : in_syscall_(false), execve_passed_(false)
 {
 }
 
@@ -84,10 +83,11 @@ int SyscallManager::handle()
   if (in_syscall_)
   {
     int num = regs.orig_eax;
-    if (!is_allowed(num))
+    if (!is_allowed(num) || !is_deep_allowed(&regs, num))
     {
-      std::cerr << "Syscall forbidden (num = " << num << ")" << std::endl;
-      std::cerr << "See /usr/include/asm-generic/unistd.h for more information"
+      std::cerr << "Syscall forbidden or blocked (num = " << num << ")"
+                << std::endl
+                << "See /usr/include/asm-generic/unistd.h for more information"
                 << std::endl << std::endl;
       print_call(&regs);
       kill(pid_, SIGKILL);
@@ -112,4 +112,31 @@ void SyscallManager::print_call(t_regs* regs)
     std::cout << "Arg5: " << regs->edi << std::endl;
     std::cout << "Arg6: " << regs->ebp << std::endl;
     std::cout << std::endl;
+}
+
+bool SyscallManager::is_deep_allowed(t_regs* regs, int sys)
+{
+  if (sys == __NR_execve)
+    return (handle_sys_execve(regs));
+  else
+    return (true);
+}
+
+bool SyscallManager::handle_sys_execve(t_regs* regs)
+{
+  (void) regs;
+  if (execve_passed_)
+    return (false);
+  else
+  {
+    execve_passed_ = true;
+    return (true);
+  }
+}
+
+bool SyscallManager::handle_sys_open(t_regs* regs)
+{
+  // FIXME: check path
+  (void) regs;
+  return (true);
 }

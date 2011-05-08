@@ -52,8 +52,13 @@ public:
 protected:
   bool in_syscall_;
   pid_t pid_;
+  bool execve_passed_;
 
   void print_call(t_regs* regs);
+  bool is_deep_allowed(t_regs* regs, int sys);
+
+  bool handle_sys_execve(t_regs* regs);
+  bool handle_sys_open(t_regs* regs);
 };
 
 #endif /* !SYSCALL_MANAGER_HH_ */
