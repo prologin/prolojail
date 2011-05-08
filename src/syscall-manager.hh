@@ -30,81 +30,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JAIL_HH_
-# define JAIL_HH_
+#ifndef SYSCALL_MANAGER_HH_
+# define SYSCALL_MANAGER_HH_
 
-#include "exec-exception.hh"
-#include "syscall-manager.hh"
-
+# include <sys/types.h>
 # include <boost/optional.hpp>
-# include <string>
-# include <vector>
 
-# include <time.h>
-
-# define SLEEP_TIME_MS 100
-# define ERR_PROCESS_TERM 1
-# define ERR_MAX_TIME 2
-# define ERR_MAX_MEM 4
-
-class jail
+class SyscallManager
 {
 public:
-  typedef std::vector<std::string> cmd_type;
+  typedef struct user_regs_struct t_regs;
 
-  jail(const cmd_type& cmd);
-  int run();
-
-  const cmd_type& cmd() const
+  SyscallManager();
+  int handle();
+  void set_pid(pid_t pid)
   {
-    return cmd_;
+    pid_ = pid;
   }
+  bool is_allowed(int num) const;
 
-  boost::optional<size_t>& time_limit()
-  {
-    return time_limit_;
-  }
+protected:
+  bool in_syscall_;
+  pid_t pid_;
 
-  const boost::optional<size_t>& time_limit() const
-  {
-    return time_limit_;
-  }
-
-  boost::optional<size_t>& memory_limit()
-  {
-    return mem_limit_;
-  }
-
-  const boost::optional<size_t>& memory_limit() const
-  {
-    return mem_limit_;
-  }
-
-private:
-  int child_run();
-  int tracer_run();
-  int kill_process();
-
-  size_t check_limits();
-  size_t check_time_limit();
-  size_t check_time_limit_fallback();
-  size_t check_memory_limit();
-
-  int handle_return_code(size_t res_thread, int return_code, int signum);
-
-  void start_watchdog(pthread_t* thread);
-  static void *thread_entry(void* obj);
-  void* thread_run();
-
-  int tracer_handle_status(int status, int& signum);
-
-  cmd_type cmd_;
-  boost::optional<size_t> time_limit_;
-  boost::optional<size_t> mem_limit_;
-
-  time_t timestamp_start_;
-  SyscallManager syscall_;
-  pid_t child_pid_;
+  void print_call(t_regs* regs);
 };
 
-#endif // !JAIL_HH_
+#endif /* !SYSCALL_MANAGER_HH_ */

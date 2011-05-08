@@ -50,8 +50,6 @@ jail::jail(const jail::cmd_type& cmd) : cmd_(cmd)
 
 int jail::run()
 {
-  timestamp_start_ = time(NULL);
-
   if ((child_pid_ = fork()) == -1)
     throw exec_exception("could not fork");
   else if (!child_pid_)
@@ -85,6 +83,12 @@ int jail::tracer_handle_status(int status, int& signum)
     signum = WSTOPSIG(status);
     return (1);
   }
+  else if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGTRAP)
+  {
+    if (!syscall_.handle())
+      return (1);
+    return (-1);
+  }
   else
     return (-1);
 }
@@ -97,6 +101,9 @@ int jail::tracer_run()
   int signum = 0;
   int return_code;
   int status;
+
+  timestamp_start_ = time(NULL);
+  syscall_.set_pid(child_pid_);
 
   while (true)
   {
@@ -183,7 +190,7 @@ size_t jail::check_time_limit()
       return (ERR_MAX_TIME);
     }
 
-    return check_time_limit_fallback();
+    return (check_time_limit_fallback());
   }
 
   return (0);
