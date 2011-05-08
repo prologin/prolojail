@@ -43,6 +43,7 @@ int main (int argc, const char** argv)
 
   std::cout << "Memory: " << options.get_memory() << " ko." << std::endl;
   std::cout << "Time: " << options.get_time() << " ms." << std::endl;
+  std::cout << std::endl;
 
   jail j(options.get_cmd());
   j.time_limit() = options.get_time();
