@@ -151,8 +151,6 @@ bool syscall_manager::handle_sys_execve(t_regs* regs)
  */
 bool syscall_manager::handle_sys_open(t_regs* regs)
 {
-  print_call(regs);
-
   int flags = regs->ecx;
   if (flags != O_RDONLY)
     return (false);
