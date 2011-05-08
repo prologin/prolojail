@@ -64,17 +64,17 @@ const t_syscall_name syscalls =
   { __NR_write, "write" }
 };
 
-SyscallManager::SyscallManager() : in_syscall_(false), execve_passed_(false)
+syscall_manager::syscall_manager() : in_syscall_(false), execve_passed_(false)
 {
 }
 
-bool SyscallManager::is_allowed(int num) const
+bool syscall_manager::is_allowed(int num) const
 {
   t_syscall_name::const_iterator it = syscalls.find(num);
   return (it != syscalls.end());
 }
 
-int SyscallManager::handle()
+int syscall_manager::handle()
 {
   t_regs regs;
   ptrace(PTRACE_GETREGS, pid_, NULL, &regs);
@@ -98,7 +98,7 @@ int SyscallManager::handle()
   return (1);
 }
 
-void SyscallManager::print_call(t_regs* regs)
+void syscall_manager::print_call(t_regs* regs)
 {
     t_syscall_name::const_iterator it = syscalls.find(regs->eax);
     std::string name;
@@ -114,7 +114,7 @@ void SyscallManager::print_call(t_regs* regs)
     std::cout << std::endl;
 }
 
-bool SyscallManager::is_deep_allowed(t_regs* regs, int sys)
+bool syscall_manager::is_deep_allowed(t_regs* regs, int sys)
 {
   if (sys == __NR_execve)
     return (handle_sys_execve(regs));
@@ -122,7 +122,7 @@ bool SyscallManager::is_deep_allowed(t_regs* regs, int sys)
     return (true);
 }
 
-bool SyscallManager::handle_sys_execve(t_regs* regs)
+bool syscall_manager::handle_sys_execve(t_regs* regs)
 {
   (void) regs;
   if (execve_passed_)
@@ -134,7 +134,7 @@ bool SyscallManager::handle_sys_execve(t_regs* regs)
   }
 }
 
-bool SyscallManager::handle_sys_open(t_regs* regs)
+bool syscall_manager::handle_sys_open(t_regs* regs)
 {
   // FIXME: check path
   (void) regs;

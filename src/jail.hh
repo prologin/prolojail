@@ -103,7 +103,7 @@ private:
   boost::optional<size_t> mem_limit_;
 
   time_t timestamp_start_;
-  SyscallManager syscall_;
+  syscall_manager syscall_;
   pid_t child_pid_;
 };
 

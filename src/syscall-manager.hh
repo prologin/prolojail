@@ -36,12 +36,12 @@
 # include <sys/types.h>
 # include <boost/optional.hpp>
 
-class SyscallManager
+class syscall_manager
 {
 public:
   typedef struct user_regs_struct t_regs;
 
-  SyscallManager();
+  syscall_manager();
   int handle();
   void set_pid(pid_t pid)
   {
