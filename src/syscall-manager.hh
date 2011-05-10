@@ -56,6 +56,8 @@ protected:
 
   void print_call(t_regs* regs);
   bool is_deep_allowed(t_regs* regs, int sys);
+  bool path_allowed(std::string& path);
+  std::string get_process_string(long addr);
 
   bool handle_sys_execve(t_regs* regs);
   bool handle_sys_open(t_regs* regs);

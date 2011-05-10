@@ -155,8 +155,13 @@ bool syscall_manager::handle_sys_open(t_regs* regs)
   if (flags != O_RDONLY)
     return (false);
 
-  // FIXME: check path
-  return (true);
+  std::string file = get_process_string(regs->ebx);
+
+#ifdef DEBUG
+  std::cerr << "File opened: " << file << std::endl;
+#endif
+
+  return (path_allowed(file));
 }
 
 bool syscall_manager::handle_sys_access(t_regs* regs)
@@ -171,4 +176,22 @@ bool syscall_manager::handle_sys_stat64(t_regs* regs)
   // FIXME: check path
   (void) regs;
   return (true);
+}
+
+std::string syscall_manager::get_process_string(long addr)
+{
+  std::string s;
+  for (char c; (c = ptrace(PTRACE_PEEKDATA, pid_, addr, 0)) != 0; addr++)
+    s += c;
+  return s;
+}
+
+bool syscall_manager::path_allowed(std::string& path)
+{
+  if (path == "/etc/ld.so.cache")
+    return (true);
+  else if (path.substr(0, 5) == "/lib/")
+    return (true);
+  else
+    return (false);
 }
