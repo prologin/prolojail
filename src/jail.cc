@@ -58,6 +58,9 @@ int jail::run()
     return tracer_run();
 }
 
+/*
+ * Prepare the syscall tracing and exec the program to be tested
+ */
 int jail::child_run()
 {
   const char* argv[cmd_.size() + 1];
@@ -73,6 +76,9 @@ int jail::child_run()
   return 1;
 }
 
+/*
+ * Checks the status of the child process to handle it
+ */
 int jail::tracer_handle_status(int status, int& signum)
 {
   if (WIFEXITED(status))
@@ -239,7 +245,7 @@ size_t jail::check_memory_limit()
     }
     h.close();
 
-    if (mem > mem_limit_)
+    if (mem > *mem_limit_)
     {
       kill_process();
       std::string size = boost::lexical_cast<std::string>(mem);
