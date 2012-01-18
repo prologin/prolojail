@@ -31,7 +31,8 @@
  */
 
 #include "jail.hh"
-#include "signal.hh"
+//#include "signal.hh"
+#include <csignal>
 
 #include <iostream>
 #include <fstream>
@@ -141,10 +142,8 @@ int jail::handle_return_code(size_t res_thread, int return_code, int signum)
       return (return_code);
     else
     {
-      std::cerr << "Terminated by a signal: "
-                << signal_to_string(signum)
-                << std::endl;
-      return (1);
+        psignal(signum, "Terminated by a signal");
+        return (1);
     }
   }
   else
